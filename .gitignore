@@ -1,0 +1,53 @@
+# -------------[ Manually generated ]----------------- #
+[Bb]uild/
+[Bb]uilds/
+# Removal of oculussig files if any
+**/Plugins/Android/assets
+# ---------------[ Unity generated ]------------------ #
+[Tt]emp/
+[Oo]bj/
+UnityGenerated/
+[Ll]ibrary/
+/*.apk
+# ----[ Visual Studio / MonoDevelop generated ]------- #
+ExportedObj/
+*.svd
+*.userprefs
+*.csproj
+*.pidb
+*.suo
+*.sln
+*.user
+*.unityproj
+*.booproj
+# -------------[ Android Studio generated ]------------ #
+*.apk
+*.ap_
+*.dex
+*.class
+bin/
+gen/
+out/
+.gradle/
+build/
+local.properties
+proguard/
+*.log
+.navigation/
+captures/
+*.iml
+# -------------[ OS generated ]------------------------ #
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Icon?
+ehthumbs.db
+Thumbs.db
+sysinfo.txt
+# -----------------[ GitEye generated ]---------------- #
+/.project
+# -----------------[ end ]----------------------------- #
+*.pdf
+*.rtf

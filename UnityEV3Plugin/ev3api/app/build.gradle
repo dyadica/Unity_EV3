@@ -1,0 +1,65 @@
+apply plugin: "com.android.library"
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion "23.0.1"
+
+    defaultConfig {
+        minSdkVersion 19
+        targetSdkVersion 23
+        archivesBaseName="EV3Plugin"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+
+    // The following block results in a arr file being generated within build/outputs/aar
+    // with the name set via: archivesBaseName
+
+    libraryVariants.all { variant ->
+        variant.outputs.each { output ->
+            def outputFile = output.outputFile
+            if (outputFile != null && outputFile.name.endsWith('.aar')) {
+                def fileName = "${archivesBaseName}.aar"
+                output.outputFile = new File(outputFile.parent, fileName)
+            }
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    testCompile 'junit:junit:4.12'
+    compile 'com.android.support:design:23.1.1'
+    compile files('libs/classes.jar')
+}
+
+// The following task is run to delete any existing instances of the jar
+// compiled already.
+
+task deleteOldJar(type: Delete) {
+    delete "release/${archivesBaseName}.jar"
+}
+
+// The following block when run exports the contents as jar
+
+task exportJar(type: Copy) {
+    from("build/intermediates/bundles/release/")
+    into("release/")
+    include("classes.jar")
+    ///Rename the jar
+    rename("classes.jar", "${archivesBaseName}.jar")
+}
+
+// This dependency ensures that if an instance of the compiled jar already
+// exists it is deleted first before the new one is built.
+
+exportJar.dependsOn(deleteOldJar, build)
