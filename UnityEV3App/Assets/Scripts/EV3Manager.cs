@@ -1,4 +1,22 @@
-﻿using UnityEngine;
+﻿// <copyright file="EV3Manager.cs" company="dyadica.co.uk">
+// Copyright (c) 2010, 2016 All Right Reserved, http://www.dyadica.co.uk
+
+// This source is subject to the dyadica.co.uk Permissive License.
+// Please see the http://www.dyadica.co.uk/permissive-license file for more information.
+// All other rights reserved.
+
+// THIS CODE AND INFORMATION ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY 
+// KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+// PARTICULAR PURPOSE.
+//
+// </copyright>
+
+// <author>SJB</author>
+// <email>info@dyadica.co.uk</email>
+// <date>16.01.2016</date>
+
+using UnityEngine;
 using System.Collections;
 
 // Bespoke using declarations
@@ -8,6 +26,8 @@ using System.Collections.Generic;
 
 public class EV3Manager : MonoBehaviour
 {
+    #region Properties
+
     public static EV3Manager Instance;
     private string scriptLocation;
 
@@ -63,6 +83,8 @@ public class EV3Manager : MonoBehaviour
         }
     }
 
+    #region Events
+
     public delegate void throwPortDeviceUpdateEventHandler(InputPort port, Device device);
     public static event throwPortDeviceUpdateEventHandler throwPortDeviceUpdateEvent;
 
@@ -90,6 +112,17 @@ public class EV3Manager : MonoBehaviour
 
     public delegate void BluetoothUpdateEventHandler(bool state);
     public static event BluetoothUpdateEventHandler BluetoothUpdateEvent;
+
+    // Buttons
+
+    public delegate void ButtonUpdateEventHandler(BrickButton button, bool state);
+    public static event ButtonUpdateEventHandler ButtonUpdateEvent;
+
+    #endregion Events
+
+    #endregion Properties
+
+    #region Loop
 
     void Awake()
     {
@@ -133,6 +166,11 @@ public class EV3Manager : MonoBehaviour
         BluetoothUpdateEvent += 
             EV3Manager_BluetoothUpdateEvent;
 
+        // Buttons
+
+        ButtonUpdateEvent += 
+            EV3Manager_ButtonUpdateEvent;
+
 
         if (GUIManager.Instance.DebugWindow != null)
             GUIManager.Instance.DebugWindow.text = "Found unity plugin!";
@@ -158,8 +196,56 @@ public class EV3Manager : MonoBehaviour
         if(InitialiseOnStart)
             ev3Plugin.Call("initialisePlugin");
 
+    }
+
+   
+
+    void Update()
+    {
 
     }
+
+    void OnDestroy()
+    {
+        #region Events
+
+        throwPortDeviceUpdateEvent -=
+             EV3Manager_throwPortDeviceUpdateEvent;
+
+        throwPortDataUpdateEvent -=
+            EV3Manager_throwPortDataUpdateEvent;
+
+        // Sensors
+
+        InfraredSensorUpdateEvent -=
+            EV3Manager_InfraredSensorUpdateEvent;
+
+        ColourSensorUpdateEvent -=
+            EV3Manager_ColourSensorUpdateEvent;
+
+        TouchSensorUpdateEvent -=
+            EV3Manager_TouchSensorUpdateEvent;
+
+        UltrasonicSensorUpdateEvent -=
+            EV3Manager_UltrasonicSensorUpdateEvent;
+
+        GyroscopeSensorUpdateEvent -=
+            EV3Manager_GyroscopeSensorUpdateEvent;
+
+        BluetoothUpdateEvent -=
+           EV3Manager_BluetoothUpdateEvent;
+
+        // Buttons
+
+        ButtonUpdateEvent -=
+            EV3Manager_ButtonUpdateEvent;
+
+        #endregion Events
+    }
+
+    #endregion Loop
+
+    #region Events
 
     private void EV3Manager_BluetoothUpdateEvent(bool state)
     {
@@ -193,61 +279,40 @@ public class EV3Manager : MonoBehaviour
 
     private void EV3Manager_throwPortDataUpdateEvent(PortState state)
     {
-
+        // throw new System.NotImplementedException();
     }
 
     private void EV3Manager_throwPortDeviceUpdateEvent(InputPort port, Device device)
     {
-
+        // throw new System.NotImplementedException();
     }
 
-    void Update()
+    private void EV3Manager_ButtonUpdateEvent(BrickButton button, bool state)
     {
-
+        // throw new System.NotImplementedException();
     }
 
-    void OnDestroy()
-    {
-        throwPortDeviceUpdateEvent -=
-             EV3Manager_throwPortDeviceUpdateEvent;
+    #endregion Events
 
-        throwPortDataUpdateEvent -=
-            EV3Manager_throwPortDataUpdateEvent;
-
-        // Sensors
-
-        InfraredSensorUpdateEvent -=
-            EV3Manager_InfraredSensorUpdateEvent;
-
-        ColourSensorUpdateEvent -=
-            EV3Manager_ColourSensorUpdateEvent;
-
-        TouchSensorUpdateEvent -=
-            EV3Manager_TouchSensorUpdateEvent;
-
-        UltrasonicSensorUpdateEvent -=
-            EV3Manager_UltrasonicSensorUpdateEvent;
-
-        GyroscopeSensorUpdateEvent -=
-            EV3Manager_GyroscopeSensorUpdateEvent;
-
-        BluetoothUpdateEvent -=
-           EV3Manager_BluetoothUpdateEvent;
-    }
+    #region Command Methods
 
     public void InitialisePlugin()
     {
+        if (ev3Plugin == null)
+            return;
+
         ev3Plugin.SetStatic<string>("deviceName", EV3Name);
         ev3Plugin.Call("initialisePlugin");
     }
 
     public void InitialisePlugin(string ev3Name)
     {
-        EV3Name = ev3Name;
-        InitialisePlugin();       
-    }
+        if (ev3Plugin == null)
+            return;
 
-    #region Command Methods
+        EV3Name = ev3Name;
+        InitialisePlugin();
+    }
 
     public void PlayProgram(string fileName)
     {
@@ -293,7 +358,6 @@ public class EV3Manager : MonoBehaviour
 
     #endregion Command Methods
 
-
     #region Input Triggers
 
     void throwAlertUpdate(string data)
@@ -326,7 +390,21 @@ public class EV3Manager : MonoBehaviour
 
     void throwButtonUpdate(string data)
     {
+        string[] input = data.Split(',');
 
+        if (input.Length == 2)
+        {
+            string buttonType = input[0];
+            string buttonState = input[1];
+
+            BrickButton bb = (BrickButton)System.Enum.Parse(typeof(BrickButton), buttonType);
+            bool state = bool.Parse(buttonState);
+
+            if (ButtonUpdateEvent != null)
+                ButtonUpdateEvent(bb, state);
+
+            // print("Button: " + bb.ToString() + "," + state.ToString());
+        }
     }
 
     void throwPortDeviceUpdate(string data)
@@ -344,8 +422,7 @@ public class EV3Manager : MonoBehaviour
             if (throwPortDeviceUpdateEvent != null)
                 throwPortDeviceUpdateEvent(p, d);
 
-            print("PortDeviceUpdate: " + p + "," + d);
-
+            // print("PortDeviceUpdate: " + p + "," + d);
         }
     }
 
@@ -363,7 +440,7 @@ public class EV3Manager : MonoBehaviour
             string ValueS = input[4];
             string ValueP = input[5];
 
-            print("PortSensorUpdate: " + devicePort + "," + deviceType + "," + deviceMode + "," + ValueR);
+            // print("PortSensorUpdate: " + devicePort + "," + deviceType + "," + deviceMode + "," + ValueR);
 
             PortState portState = new PortState();
 

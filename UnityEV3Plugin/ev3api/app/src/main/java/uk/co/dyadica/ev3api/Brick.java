@@ -13,6 +13,12 @@ import uk.co.dyadica.ev3api.EV3Types.*;
 
 /**
  * Created by dyadica.co.uk on 03/02/2016.
+ * <p>
+ * THIS CODE AND INFORMATION ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY
+ * KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+ * PARTICULAR PURPOSE.
+ * <p/>
  */
 
 public class Brick extends AsyncTask<Void,Void,Void> implements IDataReceived
@@ -33,6 +39,11 @@ public class Brick extends AsyncTask<Void,Void,Void> implements IDataReceived
             new LinkedHashMap<>();
 
     public Port[] portsList;
+
+    // buttons
+
+    public Map<BrickButton, EV3Button> ev3Buttons =
+            new LinkedHashMap<>();
 
     public  static boolean pollEnabled = true;
 
@@ -61,7 +72,14 @@ public class Brick extends AsyncTask<Void,Void,Void> implements IDataReceived
             index++;
         }
 
+        // Populate buttons
+
         index = 0;
+
+        for(BrickButton ev3Button : BrickButton.values())
+        {
+            ev3Buttons.put(ev3Button,new EV3Button(ev3Button.toString(), ev3Button, index++));
+        }
 
         // this.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
@@ -117,7 +135,78 @@ public class Brick extends AsyncTask<Void,Void,Void> implements IDataReceived
         }
         catch (Exception ex)
         {
-            System.err.println("Poll Error: " + ex.getMessage().toString());
+            System.err.println("Poll Ports Error: " + ex.getMessage().toString());
+        }
+
+        try
+        {
+            pollButtons();
+        }
+        catch (Exception ex)
+        {
+            System.err.println("Poll Buttons Error: " + ex.getMessage().toString());
+        }
+    }
+
+    private void pollButtons() throws ArgumentException
+    {
+        // First poll all the bricks buttons
+
+        int[] buttons = directCommand.areButtonsPressed();
+
+        // Check against the previous state and fire off
+        // events to reflect any changes. This can and will
+        // be rationalised to a single call.
+
+        // region Button Check
+
+        if(ev3Buttons.get(BrickButton.Up).pressed != (buttons[0] == 1))
+        {
+            ev3Buttons.get(BrickButton.Up).pressed = (buttons[0] == 1);
+            // System.out.println("Button.Up: " + (String.valueOf(ev3Buttons.get(BrickButton.Up).pressed)));
+            ev3Manager.sendMessage("throwButtonUpdate", "Up," + ev3Buttons.get(BrickButton.Up).pressed);
+        }
+
+        if(ev3Buttons.get(BrickButton.Enter).pressed != (buttons[1] == 1))
+        {
+            ev3Buttons.get(BrickButton.Enter).pressed = (buttons[1] == 1);
+            // System.out.println("Button.Enter: " + (String.valueOf(ev3Buttons.get(BrickButton.Enter).pressed)));
+            ev3Manager.sendMessage("throwButtonUpdate", "Enter," + ev3Buttons.get(BrickButton.Enter).pressed);
+        }
+
+        if(ev3Buttons.get(BrickButton.Down).pressed != (buttons[2] == 1))
+        {
+            ev3Buttons.get(BrickButton.Down).pressed = (buttons[2] == 1);
+            // System.out.println("Button.Down: " + (String.valueOf(ev3Buttons.get(BrickButton.Down).pressed)));
+            ev3Manager.sendMessage("throwButtonUpdate", "Down," + ev3Buttons.get(BrickButton.Down).pressed);
+        }
+
+        if(ev3Buttons.get(BrickButton.Right).pressed != (buttons[3] == 1))
+        {
+            ev3Buttons.get(BrickButton.Right).pressed = (buttons[3] == 1);
+            // System.out.println("Button.Right: " + (String.valueOf(ev3Buttons.get(BrickButton.Right).pressed)));
+            ev3Manager.sendMessage("throwButtonUpdate", "Right," + ev3Buttons.get(BrickButton.Right).pressed);
+        }
+
+        if(ev3Buttons.get(BrickButton.Left).pressed != (buttons[4] == 1))
+        {
+            ev3Buttons.get(BrickButton.Left).pressed = (buttons[4] == 1);
+            // System.out.println("Button.Left: " + (String.valueOf(ev3Buttons.get(BrickButton.Left).pressed)));
+            ev3Manager.sendMessage("throwButtonUpdate", "Left," + ev3Buttons.get(BrickButton.Left).pressed);
+        }
+
+        if(ev3Buttons.get(BrickButton.Back).pressed != (buttons[5] == 1))
+        {
+            ev3Buttons.get(BrickButton.Back).pressed = (buttons[5] == 1);
+            // System.out.println("Button.Back: " + (String.valueOf(ev3Buttons.get(BrickButton.Back).pressed)));
+            ev3Manager.sendMessage("throwButtonUpdate", "Back," + ev3Buttons.get(BrickButton.Back).pressed);
+        }
+
+        if(ev3Buttons.get(BrickButton.Any).pressed != (buttons[6] == 1))
+        {
+            ev3Buttons.get(BrickButton.Any).pressed = (buttons[6] == 1);
+            // System.out.println("Button.Any: " + (String.valueOf(ev3Buttons.get(BrickButton.Any).pressed)));
+            ev3Manager.sendMessage("throwButtonUpdate", "Any," + ev3Buttons.get(BrickButton.Any).pressed);
         }
     }
 
